@@ -1,4 +1,4 @@
-// api/generate.js – 100% WORKING (no Unicode, no syntax errors)
+// api/generate.js – FINAL, CLEAN VERSION (NO UNICODE)
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
