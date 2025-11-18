@@ -24,11 +24,11 @@ Return ONLY valid JSON in this exact format (no markdown, no extra text, no code
         'X-Title': 'ColdEmailWizard',
       },
       body: JSON.stringify({
-        model: 'openai/gpt-4o-mini',   // ← cheapest & best quality for cold emails (~$0.001 per sequence)
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.8,
-        max_tokens: 4000,
-      }),
+  model: 'openai/gpt-4o',
+  messages: [{ role: 'user', content: prompt }],
+  temperature: 0.8,
+  max_tokens: 4000,
+}),
     });
 
     const data = await response.json();
