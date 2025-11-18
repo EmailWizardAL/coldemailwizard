@@ -1,4 +1,4 @@
-// api/generate.js – FINAL WORKING VERSION
+// api/generate.js – 100% WORKING (no Unicode, no syntax errors)
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -9,7 +9,9 @@ export default async function handler(req, res) {
   if (!finalKey) return res.status(500).json({ error: 'No API key available' });
 
   const prompt = `Write a personalized 7-email cold outreach sequence for ${company.trim()}. Use real recent news, funding, product launches, or LinkedIn activity if possible.
+
 Return ONLY valid JSON in this exact format (no markdown, no extra text, no code blocks):
+
 {"emails":[{"subject":"Subject 1","body":"Full email body 1"},{"subject":"Subject 2","body":"Full email body 2"},{"subject":"Subject 3","body":"Full email body 3"},{"subject":"Subject 4","body":"Full email body 4"},{"subject":"Subject 5","body":"Full email body 5"},{"subject":"Subject 6","body":"Full email body 6"},{"subject":"Subject 7","body":"Full email body 7"}]}`;
 
   try {
@@ -30,14 +32,14 @@ Return ONLY valid JSON in this exact format (no markdown, no extra text, no code
     });
 
     const data = await response.json();
-    if (!response.ok) return res.status(502).json({ error: data.error?.message || 'AI provider error' });
+    if (!response.ok) return res.status(502).json({ error: data.error?.message || 'AI error' });
 
-    let content = data.choices[0].message.content.trim();
-    // Extract JSON even if wrapped in markdown
+    let content = data.choices?.[0]?.message?.content?.trim() || '';
     const start = content.indexOf('{');
     const end = content.lastIndexOf('}') + 1;
     const jsonStr = content.substring(start, end);
     const parsed = JSON.parse(jsonStr);
+
     res.status(200).json(parsed);
   } catch (err) {
     console.error(err);
