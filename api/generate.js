@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   const finalKey = userKey?.trim() || process.env.OPENROUTER_API_KEY;
   if (!finalKey) return res.status(500).json({ error: 'No API key available' });
 
-  const prompt = `Write a personalized 7-email cold outreach sequence for ${company.trim()}. Use real recent news/funding/launches if possible. Return ONLY valid JSON:\n{"emails":[{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."}]}`;
+  const prompt = `Write a personalized 7-email cold outreach sequence for ${company.trim()}. Use real recent news, funding, product launches, or LinkedIn activity if possible. Return ONLY valid JSON in this exact format (no markdown, no extra text):\n{"emails":[{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."}]}`;
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
         'X-Title': 'ColdEmailWizard',
       },
       body: JSON.stringify({
-        model: 'google/gemini-flash-1.5-exp',  // ← 100% free, unlimited, high quality, super fast
+        model: 'google/gemini-flash-1.5-exp',  // ← This is the one that is truly free right now
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.8,
         max_tokens: 4000,
