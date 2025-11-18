@@ -1,4 +1,4 @@
-// api/generate.js – FINAL WORKING VERSION WITH FUNDED KEY
+// api/generate.js – FINAL WORKING VERSION
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -32,12 +32,12 @@ Return ONLY valid JSON in this exact format (no markdown, no extra text, no code
     const data = await response.json();
     if (!response.ok) return res.status(502).json({ error: data.error?.message || 'AI provider error' });
 
-    let content = data.choices?.[0]?.message?.content?.trim() || '';
+    let content = data.choices[0].message.content.trim();
+    // Extract JSON even if wrapped in markdown
     const start = content.indexOf('{');
     const end = content.lastIndexOf('}') + 1;
     const jsonStr = content.substring(start, end);
     const parsed = JSON.parse(jsonStr);
-
     res.status(200).json(parsed);
   } catch (err) {
     console.error(err);
