@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   const finalKey = userKey?.trim() || process.env.OPENROUTER_API_KEY;
   if (!finalKey) return res.status(500).json({ error: 'No API key available' });
 
-  const prompt = `Write a personalized 7-email cold outreach sequence for ${company.trim()}. Use real recent news/funding/launches if possible. Return ONLY valid JSON:\n{"emails":[{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."}]}`;
+  const prompt = `Write a personalized 7-email cold outreach sequence for ${company.trim()}. Use real recent news, funding, product launches, or LinkedIn activity if possible. Return ONLY valid JSON in this exact format (no markdown, no extra text):\n{"emails":[{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."},{"subject":"...","body":"..."}]}`;
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
         'X-Title': 'ColdEmailWizard',
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-3.1-70b-instruct:free',  // ← THIS EXACT STRING (owner is meta-llama)
+        model: 'qwen/qwen-2.5-72b-instruct',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.8,
         max_tokens: 4000,
@@ -28,14 +28,19 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+
     if (!response.ok) {
       console.error('OpenRouter error:', data);
       return res.status(502).json({ error: data.error?.message || 'AI provider error' });
     }
 
     let content = data.choices?.[0]?.message?.content?.trim() || '';
+
+    // Clean up any markdown wrappers
     const jsonMatch = content.match(/\{[\s\S]*\}/);
-    const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : content);
+    if (jsonMatch) content = jsonMatch[0];
+
+    const parsed = JSON.parse(content);
 
     res.status(200).json(parsed);
   } catch (err) {
