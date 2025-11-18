@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ColdEmailWizard.ai</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
+  <h1 class="text-6xl font-black bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent mb-8 text-center">
+    ColdEmailWizard.ai
+  </h1>
+  <p class="text-2xl mb-12 text-center max-w-3xl">
+    Paste any company → get a 7-email cold sequence in 47 seconds
+  </p>
+  <form id="form" class="w-full max-w-2xl">
+    <input id="company" placeholder="e.g. xAI, Tesla, OpenAI..." required class="w-full px-8 py-6 text-xl rounded-xl text-black mb-4" />
+    <button type="submit" class="w-full px-8..<Button disabled id="btn" class="w-full px-8 py-6 bg-purple-600 rounded-xl text-xl font-bold">
+      Generate Sequence
+    </button>
+  </form>
+  <pre id="result" class="mt-12 p-8 bg-gray-900 rounded-xl overflow-auto hidden"></pre>
+
+  <script>
+    const form = document.getElementById('form')
+    const btn = document.getElementById('btn')
+    const result = document.getElementById('result')
+    form.onsubmit = async (e) => {
+      e.preventDefault()
+      btn.disabled = true
+      btn.textContent = 'Generating...'
+      const company = document.getElementById('company').value
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer YOUR_OPENROUTER_KEY_HERE',
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.href,
+          'X-Title': 'ColdEmailWizard'
+        },
+        body: JSON.stringify({
+          model: 'x-ai/grok-4',
+          messages: [{ role: 'user', content: `Write a 7-email cold outreach sequence targeting ${company}. Personalize using real recent news/funding/launches. Return ONLY valid JSON: {"emails": [{"subject": "...", "body": "..."}, ...7 total]}` }]
+        })
+      })
+      const data = await res.json()
+      result.textContent = JSON.stringify(JSON.parse(data.choices[0].message.content.trim()), null, 2)
+      result.classList.remove('hidden')
+      btn.disabled = false
+      btn.textContent = 'Generate Sequence'
+    }
+  </script>
+</body>
+</html>
