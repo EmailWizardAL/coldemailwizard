@@ -16,16 +16,16 @@
   </p>
 
   <form id="form" class="w-full max-w-2xl space-y-6">
-    <input id="company" placeholder="e.g. Tesla, OpenAI, Vercel..." required 
+    <input id="company" placeholder="e.g. Tesla, OpenAI, Vercel..." required
            class="w-full px-8 py-6 text-xl rounded-xl text-black focus:outline-none focus:ring-4 focus:ring-purple-500" />
 
     <div>
-      <input id="userKey" type="password" placeholder="Optional: Your own OpenRouter/Groq key for unlimited" 
+      <input id="userKey" type="password" placeholder="Optional: Your own OpenRouter/Groq key for unlimited"
              class="w-full px-8 py-4 rounded-xl text-black text-sm" />
       <p class="text-xs text-gray-400 mt-2">Free = 5/day • Paste your key for unlimited (costs ~$2–5/mo)</p>
     </div>
 
-    <button type="submit" id="btn" 
+    <button type="submit" id="btn"
             class="w-full px-8 py-6 bg-purple-600 hover:bg-purple-700 rounded-xl text-xl font-bold transition relative">
       <span id="btnText">Generate Sequence</span>
       <span id="spinner" class="hidden">
@@ -47,69 +47,4 @@
   </div>
 
   <!-- Result area -->
-  <div id="result" class="mt-12 w-full max-w-5xl space-y-8 hidden"></div>
-  <div id="error" class="mt-8 p-6 bg-red-900/50 border border-red-500 rounded-xl max-w-2xl hidden"></div>
-
-  <script>
-    const form = document.getElementById('form');
-    const btnText = document.getElementById('btnText');
-    const spinner = document.getElementById('spinner');
-    const result = document.getElementById('result');
-    const errorDiv = document.getElementById('error');
-
-    // Free usage counter (5 per day per browser)
-    const today = new Date().toDateString();
-    let usage = localStorage.getItem('cew_usage') ? JSON.parse(localStorage.getItem('cew_usage')) : { date: today, count: 0 };
-    if (usage.date !== today) usage = { date: today, count: 0 };
-
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      const company = document.getElementById('company').value.trim();
-      const userKey = document.getElementById('userKey').value.trim();
-
-      if (!userKey && usage.count >= 5) {
-        errorDiv.textContent = "Free limit reached (5/day). Add your own key or go Pro for unlimited.";
-        errorDiv.classList.remove('hidden');
-        return;
-      }
-
-      btnText.classList.add('hidden');
-      spinner.classList.remove('hidden');
-      result.classList.add('hidden');
-      errorDiv.classList.add('hidden');
-      result.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ company, userKey })
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Something went wrong');
-
-        // Pretty display
-        result.innerHTML = data.emails.map((email, i) => `
-          <div class="p-6 bg-gray-900 rounded-xl border border-gray-800">
-            <h3 class="text-2xl font-bold text-purple-400 mb-4">Email ${i + 1}: ${email.subject}</h3>
-            <div class="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed">${email.body.trim()}</div>
-          </div>
-        `).join('');
-        result.classList.remove('hidden');
-
-        if (!userKey && usage.count < 5) {
-          usage.count++;
-          localStorage.setItem('cew_usage', JSON.stringify(usage));
-        }
-
-      } catch (err) {
-        errorDiv.textContent = `Error: ${err.message}`;
-        errorDiv.classList.remove('hidden');
-      } finally {
-        spinner.classList.add('hidden');
-        btnText.classList.remove('hidden');
-      }
-    };
-
-    // Pro button (replace with your real Stripe link later
+  <div id="result" class="mt
