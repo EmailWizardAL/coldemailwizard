@@ -3,7 +3,7 @@ export default async function handler(req, res) {
 
   const { company } = req.body
 
-  const prompt = `Write a 7-email cold outreach sequence targeting ${company}. Personalize using real recent news, funding, product launches, or LinkedIn activity. Return ONLY valid JSON: {"emails": [{"subject": "...", "body": "..."}, ...7 total]}`
+  const prompt = `Write a 7-email cold outreach sequence targeting ${company}. Personalize using real recent news, funding, product launches, or LinkedIn activity. Return ONLY valid JSON in this exact format (no extra text): {"emails": [{"subject": "string", "body": "string"}, {"subject": "string", "body": "string"}, {"subject": "string", "body": "string"}, {"subject": "string", "body": "string"}, {"subject": "string", "body": "string"}, {"subject": "string", "body": "string"}, {"subject": "string", "body": "string"}]}`
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
