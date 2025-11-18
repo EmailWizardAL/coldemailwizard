@@ -16,11 +16,11 @@ export default async function handler(req, res) {
       headers: {
         'Authorization': `Bearer ${finalKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer: 'https://coldemailwizard.ai',
+        'HTTP-Referer': 'https://coldemailwizard.ai',
         'X-Title': 'ColdEmailWizard',
       },
       body: JSON.stringify({
-        model: 'deepseek/deepseek-r1:free',  // ← This one is 100% free & working right now
+        model: 'google/gemini-flash-1.5',  // ← This one is truly free & unlimited right now
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.8,
         max_tokens: 4000,
