@@ -1,4 +1,4 @@
-// api/generate.js
+JavaScript// api/generate.js
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
         'X-Title': 'ColdEmailWizard',
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-3.1-70b-instruct' // ← $0.001 per sequence, 95% as good as GPT-4o
+        model: 'meta-llama/llama-3.1-70b-instruct',  // ← comma added here
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.8,
         max_tokens: 4000,
