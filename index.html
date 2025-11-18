@@ -5,18 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ColdEmailWizard.ai</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body class="min-h-screen bg-black text-white flex flex-col items-center justify-center p-8">
   <h1 class="text-6xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent mb-8 text-center">
     ColdEmailWizard.ai
   </h1>
   <p class="text-2xl mb-12 text-center max-w-3xl">
-    Paste any company → get a 7-email cold sequence in seconds
+    Paste any company → get a 7-email cold sequence in seconds ⚡️
   </p>
 
   <form id="form" class="w-full max-w-2xl">
-    <input id="company" placeholder="e.g. xAI, Tesla, OpenAI..." required 
+    <input id="company" placeholder="e.g. Tesla, OpenAI, Vercel..." required 
            class="w-full px-8 py-6 text-xl rounded-xl text-black mb-4 focus:outline-none focus:ring-4 focus:ring-purple-500" />
+    
+    <div class="mb-4">
+      <input id="userKey" type="password" placeholder="Optional: Your own OpenRouter/Groq key for unlimited" 
+             class="w-full px-8 py-4 rounded-xl text-black text-sm" />
+      <p class="text-xs text-gray-400 mt-2">Free = 5/day. Paste your own key for unlimited (costs you ~$2–5/mo)</p>
+    </div>
+
     <button type="submit" id="btn" 
             class="w-full px-8 py-6 bg-purple-600 hover:bg-purple-700 rounded-xl text-xl font-bold transition relative">
       <span id="btnText">Generate Sequence</span>
@@ -30,55 +38,18 @@
     </button>
   </form>
 
+  <!-- Stripe Pro button -->
+  <div class="mt-8 text-center">
+    <p class="text-gray-400 mb-4">Want unlimited without your own key? Go Pro → $39/mo</p>
+    <button id="stripeBtn" class="px-8 py-4 bg-green-600 hover:bg-green-700 rounded-xl font-bold">
+      Unlock Pro – $39/month
+    </button>
+  </div>
+
   <div id="result" class="mt-12 p-8 bg-gray-900 rounded-xl w-full max-w-4xl text-sm font-mono hidden"></div>
   <div id="error" class="mt-12 p-6 bg-red-900/50 border border-red-500 rounded-xl max-w-2xl hidden"></div>
 
   <script>
-    const form = document.getElementById('form');
-    const btnText = document.getElementById('btnText');
-    const spinner = document.getElementById('spinner');
-    const result = document.getElementById('result');
-    const errorDiv = document.getElementById('error');
-
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      const company = document.getElementById('company').value.trim();
-      if (!company) return;
-
-      // UI: Show loading
-      btnText.classList.add('hidden');
-      spinner.classList.remove('hidden');
-      result.classList.add('hidden');
-      errorDiv.classList.add('hidden');
-      result.textContent = '';
-      errorDiv.textContent = '';
-
-      try {
-        const res = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ company })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || data.details || 'Unknown error');
-        }
-
-        result.textContent = JSON.stringify(data, null, 2);
-        result.classList.remove('hidden');
-
-      } catch (err) {
-        console.error(err);
-        errorDiv.textContent = `Error: ${err.message}`;
-        errorDiv.classList.remove('hidden');
-      } finally {
-        // UI: Hide loading
-        spinner.classList.add('hidden');
-        btnText.classList.remove('hidden');
-      }
-    };
-  </script>
-</body>
-</html>
+    const stripe = Stripe('pk_live_YOUR_STRIPE_PUBLISHABLE_KEY_HERE'); // ← change to your key
+    document.getElementById('stripeBtn').addEventListener('click', () => {
+      stripe.redirectToCheckout({ sessionId: 'cs_live_YOUR_CHECKOUT
