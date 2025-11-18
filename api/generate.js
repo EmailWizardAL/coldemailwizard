@@ -8,11 +8,11 @@ export default async function handler(req, res) {
   const finalKey = userKey?.trim() || process.env.OPENROUTER_API_KEY;
   if (!finalKey) return res.status(500).json({ error: 'No API key available' });
 
-  const prompt = `You are a world-class cold email copywriter. Write a personalized 7-email outreach sequence for ${company.trim()}. Use real recent news, funding, product launches, or LinkedIn activity if possible.
+  const prompt = `Write a personalized 7-email cold outreach sequence for ${company.trim()}. Use real recent news/funding/launches if possible.
 
-Return ONLY a valid JSON object in this exact format (no markdown, no explanations, no code blocks, no extra text):
+Return ONLY valid JSON in this exact format, no markdown, no code blocks, no extra text, no explanations:
 
-{"emails":[{"subject":"First subject","body":"Full email body"},{"subject":"Second subject","body":"Full email body"},{"subject":"Third subject","body":"Full email body"},{"subject":"Fourth subject","body":"Full email body"},{"subject":"Fifth subject","body":"Full email body"},{"subject":"Sixth subject","body":"Full email body"},{"subject":"Seventh subject","body":"Full email body"}]}`;
+{"emails":[{"subject":"First subject","body":"Full email body 1"},{"subject":"Second subject","body":"Full email body 2"},{"subject":"Third subject","body":"Full email body 3"},{"subject":"Fourth subject","body":"Full email body 4"},{"subject":"Fifth subject","body":"Full email body 5"},{"subject":"Sixth subject","body":"Full email body 6"},{"subject":"Seventh subject","body":"Full email body 7"}]}`;
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -24,7 +24,7 @@ Return ONLY a valid JSON object in this exact format (no markdown, no explanatio
         'X-Title': 'ColdEmailWizard',
       },
       body: JSON.stringify({
-        model: 'openai/gpt-4o',   // or 'anthropic/claude-3.5-sonnet' if you prefer
+        model: 'openai/gpt-4o',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.8,
         max_tokens: 4000,
@@ -36,17 +36,21 @@ Return ONLY a valid JSON object in this exact format (no markdown, no explanatio
 
     let content = data.choices?.[0]?.message?.content?.trim() || '';
 
-    // Aggressive JSON extraction
-    const start = content.indexOf('{');
-    const end = content.lastIndexOf('}') + 1;
-    if (start === -1 || end === 0) throw new Error('No JSON found');
+    // Super-aggressive JSON extraction
+    const jsonStart = content.indexOf('{');
+    const jsonEnd = content.lastIndexOf('}') + 1;
+    if (jsonStart === -1 || jsonEnd === 0) throw new Error('No JSON found in response');
 
-    const jsonStr = content.slice(start, end);
-    const parsed = JSON.parse(jsonStr);
+    const jsonString = content.substring(jsonStart, jsonEnd);
+    const parsed = JSON.parse(jsonString);
+
+    if (!parsed.emails || !Array.isArray(parsed.emails) || parsed.emails.length !== 7) {
+      throw new Error('Invalid email structure');
+    }
 
     res.status(200).json(parsed);
   } catch (err) {
-    console.error(err);
+    console.error('Generation error:', err);
     res.status(500).json({ error: 'Generation failed – AI returned invalid format' });
   }
 }
