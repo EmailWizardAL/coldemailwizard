@@ -19,11 +19,12 @@ export default async function handler(req, res) {
         'HTTP-Referer': 'https://coldemailwizard.ai',
         'X-Title': 'ColdEmailWizard',
       },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-3.1-70b-instruct',  // ← comma added here
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.8,
-        max_tokens: 4000,
+     body: JSON.stringify({
+  model: 'meta-llama/llama-3.1-70b-instruct:free',
+  messages: [{ role: 'user', content: prompt }],
+  temperature: 0.8,
+  max_tokens: 4000,
+}),
       }),
     });
 
