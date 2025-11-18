@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+HTML<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ColdEmailWizard.ai ⚡</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22 y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
@@ -38,7 +38,6 @@
     </button>
   </form>
 
-  <!-- Pro button -->
   <div class="mt-10 text-center">
     <p class="text-gray-400 mb-4">Want unlimited without your own key?</p>
     <button id="proBtn" class="px-10 py-4 bg-green-600 hover:bg-green-700 rounded-xl font-bold text-lg">
@@ -46,5 +45,72 @@
     </button>
   </div>
 
-  <!-- Result area -->
-  <div id="result" class="mt
+  <div id="result" class="mt-12 w-full max-w-5xl space-y-8 hidden"></div>
+  <div id="error" class="mt-8 p-6 bg-red-900/50 border border-red-500 rounded-xl max-w-2xl hidden"></div>
+
+  <script>
+    const form = document.getElementById('form');
+    const btnText = document.getElementById('btnText');
+    const spinner = document.getElementById('spinner');
+    const result = document.getElementById('result');
+    const errorDiv = document.getElementById('error');
+
+    // 5 free per day
+    const today = new Date().toDateString();
+    let usage = localStorage.getItem('cew_usage') ? JSON.parse(localStorage.getItem('cew_usage')) : { date: today, count: 0 };
+    if (usage.date !== today) usage = { date: today, count: 0 };
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const company = document.getElementById('company').value.trim();
+      const userKey = document.getElementById('userKey').value.trim();
+
+      if (!userKey && usage.count >= 5) {
+        errorDiv.textContent = "Free limit reached (5/day). Paste your own key or go Pro.";
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+
+      btnText.classList.add('hidden');
+      spinner.classList.remove('hidden');
+      result.classList.add('hidden');
+      errorDiv.classList.add('hidden');
+      result.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ company, userKey })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Something went wrong');
+
+        result.innerHTML = data.emails.map((email, i) => `
+          <div class="p-6 bg-gray-900 rounded-xl border border-gray-800">
+            <h3 class="text-2xl font-bold text-purple-400 mb-4">Email ${i + 1}: ${email.subject}</h3>
+            <div class="text-gray-300 whitespace-pre-wrap text-sm leading-relaxed">${email.body.trim()}</div>
+          </div>
+        `).join('');
+        result.classList.remove('hidden');
+
+        if (!userKey) {
+          usage.count++;
+          localStorage.setItem('cew_usage', JSON.stringify(usage));
+        }
+      } catch (err) {
+        errorDiv.textContent = `Error: ${err.message}`;
+        errorDiv.classList.remove('hidden');
+      } finally {
+        spinner.classList.add('hidden');
+        btnText.classList.remove('hidden');
+      }
+    };
+
+    document.getElementById('proBtn').addEventListener('click', () => {
+      alert('Pro plan coming soon — paste your own key for unlimited right now!');
+    });
+  </script>
+</body>
+</html>
