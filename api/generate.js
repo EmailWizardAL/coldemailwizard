@@ -1,4 +1,4 @@
-JavaScript// api/generate.js
+// api/generate.js
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -19,17 +19,19 @@ export default async function handler(req, res) {
         'HTTP-Referer': 'https://coldemailwizard.ai',
         'X-Title': 'ColdEmailWizard',
       },
-     body: JSON.stringify({
-  model: 'meta-llama/llama-3.1-70b-instruct:free',
-  messages: [{ role: 'user', content: prompt }],
-  temperature: 0.8,
-  max_tokens: 4000,
-}),
+      body: JSON.stringify({
+        model: 'meta-llama/llama-3.1-70b-instruct:free',  // ← THIS EXACT STRING (owner is meta-llama)
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.8,
+        max_tokens: 4000,
       }),
     });
 
     const data = await response.json();
-    if (!response.ok) return res.status(502).json({ error: data.error?.message || 'AI provider error' });
+    if (!response.ok) {
+      console.error('OpenRouter error:', data);
+      return res.status(502).json({ error: data.error?.message || 'AI provider error' });
+    }
 
     let content = data.choices?.[0]?.message?.content?.trim() || '';
     const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -37,7 +39,7 @@ export default async function handler(req, res) {
 
     res.status(200).json(parsed);
   } catch (err) {
-    console.error(err);
+    console.error('Server error:', err);
     res.status(500).json({ error: 'Failed – check your key & credits' });
   }
 }
