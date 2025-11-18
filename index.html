@@ -11,36 +11,74 @@
     ColdEmailWizard.ai
   </h1>
   <p class="text-2xl mb-12 text-center max-w-3xl">
-    Paste any company → get a 7-email cold sequence in 47 seconds
+    Paste any company → get a 7-email cold sequence in seconds
   </p>
+
   <form id="form" class="w-full max-w-2xl">
-    <input id="company" placeholder="e.g. xAI, Tesla, OpenAI..." required class="w-full px-8 py-6 text-xl rounded-xl text-black mb-4" />
-    <button type="submit" id="btn" class="w-full px-8 py-6 bg-purple-600 rounded-xl text-xl font-bold">
-      Generate Sequence
+    <input id="company" placeholder="e.g. xAI, Tesla, OpenAI..." required 
+           class="w-full px-8 py-6 text-xl rounded-xl text-black mb-4 focus:outline-none focus:ring-4 focus:ring-purple-500" />
+    <button type="submit" id="btn" 
+            class="w-full px-8 py-6 bg-purple-600 hover:bg-purple-700 rounded-xl text-xl font-bold transition relative">
+      <span id="btnText">Generate Sequence</span>
+      <span id="spinner" class="hidden">
+        <svg class="inline w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Generating...
+      </span>
     </button>
   </form>
-  <pre id="result" class="mt-12 p-8 bg-gray-900 rounded-xl overflow-auto hidden w-full max-w-4xl text-sm"></pre>
+
+  <div id="result" class="mt-12 p-8 bg-gray-900 rounded-xl w-full max-w-4xl text-sm font-mono hidden"></div>
+  <div id="error" class="mt-12 p-6 bg-red-900/50 border border-red-500 rounded-xl max-w-2xl hidden"></div>
 
   <script>
-    const form = document.getElementById('form')
-    const btn = document.getElementById('btn')
-    const result = document.getElementById('result')
+    const form = document.getElementById('form');
+    const btnText = document.getElementById('btnText');
+    const spinner = document.getElementById('spinner');
+    const result = document.getElementById('result');
+    const errorDiv = document.getElementById('error');
+
     form.onsubmit = async (e) => {
-      e.preventDefault()
-      btn.disabled = true
-      btn.textContent = 'Generating...'
-      const company = document.getElementById('company').value
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ company })
-      })
-      const data = await res.json()
-      result.textContent = JSON.stringify(data, null, 2)
-      result.classList.remove('hidden')
-      btn.disabled = false
-      btn.textContent = 'Generate Sequence'
-    }
+      e.preventDefault();
+      const company = document.getElementById('company').value.trim();
+      if (!company) return;
+
+      // UI: Show loading
+      btnText.classList.add('hidden');
+      spinner.classList.remove('hidden');
+      result.classList.add('hidden');
+      errorDiv.classList.add('hidden');
+      result.textContent = '';
+      errorDiv.textContent = '';
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ company })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || data.details || 'Unknown error');
+        }
+
+        result.textContent = JSON.stringify(data, null, 2);
+        result.classList.remove('hidden');
+
+      } catch (err) {
+        console.error(err);
+        errorDiv.textContent = `Error: ${err.message}`;
+        errorDiv.classList.remove('hidden');
+      } finally {
+        // UI: Hide loading
+        spinner.classList.add('hidden');
+        btnText.classList.remove('hidden');
+      }
+    };
   </script>
 </body>
 </html>
