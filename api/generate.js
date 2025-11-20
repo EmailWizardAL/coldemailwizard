@@ -1,4 +1,4 @@
-// api/generate.js - fixed November 19, 2025 (ASCII only)
+JavaScript// api/generate.js - clean ASCII only - November 19 2025
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
@@ -33,22 +33,28 @@ Return ONLY valid JSON in this exact format (no markdown, no extra text, no code
     if (!response.ok) {
       const err = await response.text();
       console.error("OpenRouter error:", response.status, err);
-      return res.status(502).json({ error: "AI provider error" });
+      return res.status(502).json({ error: "AI provider error", details: err.substring(0, 300) });
     }
 
     const data = await response.json();
     let text = data.choices?.[0]?.message?.content || "";
 
+    // Strip code blocks
     text = text.replace(/```json|```/g, "").trim();
 
+    // Extract JSON safely
     const jsonMatch = text.match(/\{[\s\S]*"emails"[\s\S]*\}/);
-    if (!jsonMatch) return res.status(500).json({ error: "Invalid AI response" });
+    if (!jsonMatch) {
+      console.error("No JSON in response:", text);
+      return res.status(500).json({ error: "AI gave bad format" });
+    }
 
     let parsed;
     try {
       parsed = JSON.parse(jsonMatch[0]);
     } catch (e) {
-      return res.status(500).json({ error: "Failed to parse AI output" });
+      console.error("Parse error:", e.message);
+      return res.status(500).json({ error: "Failed to parse AI response" });
     }
 
     return res.status(200).json(parsed);
