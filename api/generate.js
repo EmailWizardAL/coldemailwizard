@@ -1,19 +1,13 @@
-// api/generate.js – fixed & working November 19, 2025
+// api/generate.js - fixed November 19, 2025 (ASCII only)
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const { company, userKey } = req.body;
-  if (!company?.trim()) {
-    return res.status(400).json({ error: "Company required" });
-  }
+  if (!company?.trim()) return res.status(400).json({ error: "Company required" });
 
   const finalKey = userKey?.trim() || process.env.OPENROUTER_API_KEY;
-  if (!finalKey) {
-    return res.status(500).json({ error: "No API key available" });
-  }
+  if (!finalKey) return res.status(500).json({ error: "No API key available" });
 
   const prompt = `Write a personalized 7-email cold outreach sequence for ${company.trim()}. Use real recent news, funding, product launches, or LinkedIn activity if possible.
 Return ONLY valid JSON in this exact format (no markdown, no extra text, no code blocks):
@@ -29,7 +23,7 @@ Return ONLY valid JSON in this exact format (no markdown, no extra text, no code
         "X-Title": "ColdEmailWizard",
       },
       body: JSON.stringify({
-        model: "openai/gpt-4o-mini-2024-07-18",
+        model: "openai/gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.8,
         max_tokens: 4000,
@@ -39,7 +33,7 @@ Return ONLY valid JSON in this exact format (no markdown, no extra text, no code
     if (!response.ok) {
       const err = await response.text();
       console.error("OpenRouter error:", response.status, err);
-      return res.status(502).json({ error: "AI provider error", details: err.substring(0, 300) });
+      return res.status(502).json({ error: "AI provider error" });
     }
 
     const data = await response.json();
@@ -48,23 +42,19 @@ Return ONLY valid JSON in this exact format (no markdown, no extra text, no code
     text = text.replace(/```json|```/g, "").trim();
 
     const jsonMatch = text.match(/\{[\s\S]*"emails"[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.error("No JSON found:", text);
-      return res.status(500).json({ error: "Invalid response from AI" });
-    }
+    if (!jsonMatch) return res.status(500).json({ error: "Invalid AI response" });
 
     let parsed;
     try {
       parsed = JSON.parse(jsonMatch[0]);
     } catch (e) {
-      console.error("JSON parse failed:", e.message);
       return res.status(500).json({ error: "Failed to parse AI output" });
     }
 
     return res.status(200).json(parsed);
 
   } catch (err) {
-    console.error("Unexpected error:", err);
+    console.error("Server error:", err);
     return res.status(500).json({ error: "Server error" });
   }
 }
