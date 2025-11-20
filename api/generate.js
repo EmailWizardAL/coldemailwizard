@@ -1,4 +1,4 @@
-// api/generate.js clean
+// clean short comment
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
@@ -6,14 +6,7 @@ export default async function handler(req, res) {
   if (!company?.trim()) return res.status(400).json({ error: "Company required" });
   const finalKey = userKey?.trim() || process.env.OPENROUTER_API_KEY;
   if (!finalKey) return res.status(500).json({ error: "No API key available" });
-
-  const prompt = "Write a personalized 7-email cold outreach sequence for " + company.trim() + 
-    ". Use real recent news, funding, product launches, or LinkedIn activity if possible.\nReturn 
-    ONLY valid JSON in this exact format (no markdown, no extra text, no code blocks):\n{\"emails\":[{\"subject\":\"Subject 1\
-    ",\"body\":\"Full email body 1\"},{\"subject\":\"Subject 2\",\"body\":\"Full email body 2\"},{\"subject\":\"Subject 3\",\"body\":\
-    "Full email body 3\"},{\"subject\":\"Subject 4\",\"body\":\"Full email body 4\"},{\"subject\":\"Subject 5\",\"body\":\"Full email body 5\
-    "},{\"subject\":\"Subject 6\",\"body\":\"Full email body 6\"},{\"subject\":\"Subject 7\",\"body\":\"Full email body 7\"}]}";
-
+  const prompt = "Write a personalized 7-email cold outreach sequence for " + company.trim() + ". Use real recent news, funding, product launches, or LinkedIn activity if possible.\nReturn ONLY valid JSON in this exact format (no markdown, no extra text, no code blocks):\n{\"emails\":[{\"subject\":\"Subject 1\",\"body\":\"Full email body 1\"},{\"subject\":\"Subject 2\",\"body\":\"Full email body 2\"},{\"subject\":\"Subject 3\",\"body\":\"Full email body 3\"},{\"subject\":\"Subject 4\",\"body\":\"Full email body 4\"},{\"subject\":\"Subject 5\",\"body\":\"Full email body 5\"},{\"subject\":\"Subject 6\",\"body\":\"Full email body 6\"},{\"subject\":\"Subject 7\",\"body\":\"Full email body 7\"}]}";
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -30,23 +23,20 @@ export default async function handler(req, res) {
         max_tokens: 4000
       })
     });
-
     if (!response.ok) {
       const err = await response.text();
-      return res.status(502).json({ error: "AI error", details: err.substring(0, 300) });
+      console.error("OpenRouter error:", response.status, err);
+      return res.status(502).json({ error: "AI provider error" });
     }
-
     const data = await response.json();
     let text = data.choices?.[0]?.message?.content || "";
     text = text.replace(/```json|```/g, "").trim();
-    const start = text.indexOf("{");
-    const end = text.lastIndexOf("}") + 1;
-    if (start === -1 || end === 0) return res.status(500).json({ error: "Bad format" });
-    const json = JSON.parse(text.substring(start, end));
-    res.status(200).json(json);
-
+    const jsonMatch = text.match(/\{[\s\S]*"emails"[\s\S]*\}/);
+    if (!jsonMatch) return res.status(500).json({ error: "Bad AI format" });
+    const parsed = JSON.parse(jsonMatch[0]);
+    return res.status(200).json(parsed);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    console.error("Server error:", err);
+    return res.status(500).json({ error: "Server error" });
   }
 }
